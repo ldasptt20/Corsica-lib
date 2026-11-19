@@ -150,6 +150,7 @@ public final class MemberActivity extends Activity {
         account=state;
         if (!state.optBoolean("connected")) { home(); return; }
         JSONObject p=state.optJSONObject("profile");
+        if (p == null) { home(); status.setText("Profil indisponible. Réessayez la connexion."); return; }
         page("Bonjour "+p.optString("pseudo"),null);
         status.setText(state.optString("notice"));
         if (!state.optBoolean("email_ok")) {
@@ -184,7 +185,8 @@ public final class MemberActivity extends Activity {
         });
     }
     void members(boolean favorites) {
-        page(favorites?"Mes favoris":"Les membres",() -> dashboard(account));
+        page(favorites?"Mes favoris":"Découvrir les profils",() -> dashboard(account));
+        if (!favorites) label("Rencontres en Corse · résidents et visiteurs",14).setTextColor(PINK);
         request("members/",null,d -> {
             JSONArray rows=d.getJSONArray("members"); int count=0;
             for (int i=0;i<rows.length();i++) {
@@ -211,7 +213,12 @@ public final class MemberActivity extends Activity {
             JSONArray rows=d.getJSONArray("messages");
             for (int i=0;i<rows.length();i++) {
                 JSONObject m=rows.getJSONObject(i);
-                label((m.optBoolean("mine")?"Moi":p.optString("pseudo"))+" · "+m.optString("body"),16);
+                TextView message = label((m.optBoolean("mine")?"Moi":p.optString("pseudo"))+"  ·  "+m.optString("body"),16);
+                message.setBackgroundColor(SURFACE);
+                message.setPadding(dp(15),dp(12),dp(15),dp(12));
+                LinearLayout.LayoutParams spacing = (LinearLayout.LayoutParams) message.getLayoutParams();
+                spacing.setMargins(0,dp(5),0,dp(5));
+                message.setLayoutParams(spacing);
             }
             field("body","Votre message","",131073);
             button("Envoyer",() -> request(path,values(),sent -> chat(p,favorites)));
