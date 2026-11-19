@@ -11,7 +11,7 @@ button {padding:.65rem 1rem;border:0;border-radius:.5rem;font:inherit;font-weigh
 header button {background:transparent;color:#ff81c4;text-decoration:underline} :focus-visible {outline:3px solid white;outline-offset:2px}
 .errorlist {color:#ffb1ce} figure {margin:1rem 0} img {max-width:100%;border-radius:.5rem}
 </style></head><body><header><a class="brand" href="/">CORSICA <span>LIB</span></a>
-<nav>{% if request.user.is_authenticated %}<a href="{% url 'account' %}">Mon compte</a><form method="post" action="{% url 'signout' %}">{% csrf_token %}<button>Déconnexion</button></form>
+<nav>{% if request.user.is_authenticated %}{% if request.user.profile.email_ok and request.user.profile.adult_at %}<a href="{% url 'discover' %}">Rencontres en Corse</a>{% endif %}<a href="{% url 'account' %}">Mon compte</a><form method="post" action="{% url 'signout' %}">{% csrf_token %}<button>Déconnexion</button></form>
 {% else %}<a href="{% url 'signup' %}">Inscription</a><a href="{% url 'signin' %}">Connexion</a>{% endif %}</nav></header>
 <main><h1>{{ title }}</h1>{% if notice %}<p role="status">{{ notice }}</p>{% endif %}
 {% if button %}<form method="post">{% csrf_token %}{{ form.as_p }}<button>{{ button }}</button></form>{% endif %}
@@ -22,6 +22,15 @@ header button {background:transparent;color:#ff81c4;text-decoration:underline} :
 <form method="post" action="{% url 'start_age' %}">{% csrf_token %}<button>Continuer chez Yoti</button></form>
 {% if account.age_session %}<p><a href="{% url 'age_return' %}">Vérifier le résultat</a></p>{% endif %}
 {% else %}<a href="{% url 'edit' %}">Modifier mon profil et mes photos</a>{% endif %}{% endif %}
+{% if discovering %}
+<form method="get">
+<p><label for="ville">Ville en Corse</label><input id="ville" name="ville" value="{{ city }}" placeholder="Toutes les villes" maxlength="80"></p>
+<p><label for="type">Type de profil</label><select id="type" name="type"><option value="">Tous les profils</option>{% for value,label in kinds %}<option value="{{ value }}" {% if value == kind %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></p>
+<button>Rechercher</button></form>
+{% for person in results %}<article><h2>{{ person.pseudo }}</h2><p>{{ person.city }} · {{ person.get_kind_display }}</p><p>{{ person.bio }}</p></article>{% empty %}<p>Aucun profil ne correspond à votre recherche.</p>{% endfor %}
+<nav aria-label="Pages">{% if results.has_previous %}<a href="?ville={{ city|urlencode }}&amp;type={{ kind|urlencode }}&amp;page={{ results.previous_page_number }}">Précédente</a>{% endif %}
+{% if results.has_next %}<a href="?ville={{ city|urlencode }}&amp;type={{ kind|urlencode }}&amp;page={{ results.next_page_number }}">Suivante</a>{% endif %}</nav>
+{% endif %}
 {% if gallery %}<h2>Mes photos</h2><p>Ces photos sont visibles uniquement par vous dans cette version.</p>
 {% for pk in photos %}<figure><img src="{% url 'photo' pk %}" alt="Ma photo {{ forloop.counter }}" loading="lazy"></figure>{% endfor %}
 <form method="post" enctype="multipart/form-data" action="{% url 'upload' %}">{% csrf_token %}<p><label for="photo">Photo (JPEG, PNG ou WebP, 5 Mo maximum)</label><input id="photo" type="file" name="photo" accept="image/jpeg,image/png,image/webp" required></p><button>Ajouter la photo</button></form>{% endif %}

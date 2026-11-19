@@ -10,6 +10,7 @@ for route, view, name in [
     ("deconnexion/", views.signout, "signout"), ("compte/", views.account, "account"),
     ("confirmation/renvoyer/", views.resend, "resend"), ("confirmation/<str:token>/", views.confirm, "confirm"),
     ("majorite/", views.start_age, "start_age"), ("majorite/retour/", views.age_return, "age_return"),
+    ("rencontres/", views.discover, "discover"),
     ("profil/", views.edit, "edit"), ("photos/", views.upload, "upload"), ("photos/<int:pk>/", views.photo, "photo"),
 ]:
     urlpatterns.append(path(route, never_cache(view), name=name))

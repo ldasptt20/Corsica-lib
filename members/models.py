@@ -10,6 +10,7 @@ class Profile(models.Model):
     kind = models.CharField("Type de profil", choices=TYPES, max_length=12)
     birth = models.DateField("Date de naissance")
     bio = models.CharField("Présentation", max_length=500, blank=True)
+    discoverable = models.BooleanField("Afficher mon profil dans les rencontres en Corse", default=False)
     email_ok = models.BooleanField(default=False)
     adult_at = models.DateTimeField(null=True)
     age_session = models.CharField(max_length=64, blank=True)

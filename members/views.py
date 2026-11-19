@@ -227,3 +227,22 @@ def upload(request, profile):
 def photo(request, profile, pk):
     item = get_object_or_404(Photo, owner=profile, pk=pk)
     return HttpResponse(bytes(item.jpeg), content_type="image/jpeg")
+
+
+@member
+@require_safe
+def discover(request, profile):
+    from django.core.paginator import Paginator
+
+    city = request.GET.get("ville", "").strip()[:80]
+    kind = request.GET.get("type", "")
+    profiles = Profile.objects.filter(discoverable=True, email_ok=True, adult_at__isnull=False,
+                                      user__is_active=True).exclude(pk=profile.pk)
+    if city:
+        profiles = profiles.filter(city__iexact=city)
+    if kind:
+        profiles = profiles.filter(kind=kind)
+    profiles = profiles.order_by("pseudo", "pk").only("pseudo", "city", "kind", "bio")
+    results = Paginator(profiles, 20).get_page(request.GET.get("page"))
+    return page(request, "Rencontres en Corse", discovering=True, results=results, city=city,
+                kind=kind, kinds=Profile.TYPES)

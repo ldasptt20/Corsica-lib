@@ -7,7 +7,8 @@ from .models import Profile
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ["pseudo", "city", "kind", "bio"]
+        fields = ["pseudo", "city", "kind", "bio", "discoverable"]
+        help_texts = {"discoverable": "Les membres vérifiés pourront voir votre pseudonyme, votre ville, votre type de profil et votre présentation."}
         widgets = {"bio": forms.Textarea(attrs={"rows": 3})}
 
 

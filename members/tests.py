@@ -134,3 +134,22 @@ class MemberFlow(TestCase):
         self.client.post("/inscription/", {**self.data, "email": "autre@example.org"})
         Profile.objects.exclude(pk=p.pk).update(email_ok=True, adult_at=timezone.now())
         self.assertEqual(self.client.get(url).status_code, 404)
+
+    def test_discovery_visibility_and_filters(self):
+        viewer = self.signup()
+        self.assertRedirects(self.client.get("/rencontres/"), "/compte/")
+        viewer.email_ok = True
+        viewer.adult_at = timezone.now()
+        viewer.save()
+        other = type(viewer.user).objects.create_user("other")
+        candidate = Profile.objects.create(user=other, pseudo="Calanca", city="Corte", kind="couple",
+                                           birth=viewer.birth, email_ok=True, adult_at=timezone.now())
+        self.assertNotContains(self.client.get("/rencontres/"), "Calanca")
+        candidate.discoverable = True
+        candidate.save()
+        self.assertContains(self.client.get("/rencontres/", {"ville": "corte", "type": "couple"}), "Calanca")
+        for filters in ({"ville": "Bastia"}, {"type": "solo"}):
+            self.assertNotContains(self.client.get("/rencontres/", filters), "Calanca")
+        candidate.adult_at = None
+        candidate.save()
+        self.assertNotContains(self.client.get("/rencontres/"), "Calanca")
