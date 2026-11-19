@@ -38,10 +38,11 @@ android {
             applicationIdSuffix '.test'
         }
         release {
-            if (origin == 'http://127.0.0.1:8000') {
+            def buildingRelease = gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
+            if (buildingRelease && origin == 'http://127.0.0.1:8000') {
                 throw new GradleException('Une origine HTTPS publique est obligatoire pour une version Play Store')
             }
-            if (!(releaseKeystore && releaseAlias && releaseStorePassword && releaseKeyPassword)) {
+            if (buildingRelease && !(releaseKeystore && releaseAlias && releaseStorePassword && releaseKeyPassword)) {
                 throw new GradleException('Signature de publication manquante')
             }
             signingConfig signingConfigs.release
