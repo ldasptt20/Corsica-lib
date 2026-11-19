@@ -3,10 +3,10 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 BASE = Path(__file__).resolve().parent.parent
-PRIVATE = BASE / ".private"
+PRIVATE = Path(os.getenv("MEMBERS_DATA_DIR") or BASE / ".private")
 PRIVATE.mkdir(mode=0o700, exist_ok=True)
 SECRET_KEY = os.environ["SESSION_SECRET"]
-ORIGIN = os.getenv("APP_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+ORIGIN = (os.getenv("APP_BASE_URL") or os.getenv("RENDER_EXTERNAL_URL") or "http://127.0.0.1:8000").rstrip("/")
 url = urlsplit(ORIGIN)
 local = url.hostname in {"127.0.0.1", "localhost", "[::1]"}
 if url.scheme != "https" and not (local and url.scheme == "http"):
@@ -27,6 +27,8 @@ DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": PRIVATE
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.Argon2PasswordHasher"]
 SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = url.scheme == "https"
+if os.getenv("RENDER") == "true":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = not local
 SECURE_REFERRER_POLICY = "no-referrer"
 SESSION_COOKIE_AGE = 86400
