@@ -3,6 +3,7 @@ from django.views.decorators.cache import never_cache
 from django.views.generic import RedirectView
 
 from . import views
+from . import mobile
 
 urlpatterns = [path("", RedirectView.as_view(pattern_name="account"))]
 for route, view, name in [
@@ -13,3 +14,9 @@ for route, view, name in [
     ("profil/", views.edit, "edit"), ("photos/", views.upload, "upload"), ("photos/<int:pk>/", views.photo, "photo"),
 ]:
     urlpatterns.append(path(route, never_cache(view), name=name))
+
+for route, view in [
+    ("state/", mobile.state), ("result/", mobile.result), ("account/<str:action>/", mobile.account_action),
+    ("profile/", mobile.profile), ("members/", mobile.directory), ("members/<int:pk>/<str:action>/", mobile.contact),
+]:
+    urlpatterns.append(path("api/mobile/" + route, never_cache(view)))

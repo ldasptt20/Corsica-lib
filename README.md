@@ -34,7 +34,9 @@ Les tests utilisent une base éphémère, une boîte mail en mémoire et des ré
 
 ## Android de développement
 
-Le projet `android/` affiche un accueil natif noir et fuchsia. Les boutons d’inscription et de connexion ouvrent le serveur privé dans le navigateur Android avec le protocole Custom Tabs. Le client partage ainsi la session du navigateur pour les confirmations et le retour de Yoti. Sa seule destination initiale est le serveur de développement sur le port 8000.
+Le client Android affiche les formulaires, les profils, les conversations et les favoris dans des écrans natifs. Le navigateur prend en charge le lien reçu par e-mail et la capture hébergée chez Yoti. Après le selfie, « Consulter le résultat » demande au serveur de vérifier le dossier associé à la session Android.
+
+La compilation de test utilise par défaut la liaison USB ci-dessous. Pour utiliser un serveur membre déployé, fournir son origine HTTPS avec `-PmemberOrigin=https://votre-domaine` à Gradle et configurer la même valeur pour `APP_BASE_URL` sur le serveur.
 
 Avec Gradle 8.11.1, JDK 17 et Android SDK 35 installés, exécuter depuis la racine :
 

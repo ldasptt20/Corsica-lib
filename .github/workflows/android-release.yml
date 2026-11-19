@@ -1,0 +1,59 @@
+name: Android Play Store bundle (signed)
+
+on:
+  workflow_dispatch:
+    inputs:
+      member_origin:
+        description: 'URL HTTPS du serveur membre en production (sans barre finale)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK 35
+        run: |
+          SDKMANAGER="$(find /usr/local/lib/android/sdk/cmdline-tools -path '*/bin/sdkmanager' -type f | sort -V | tail -n 1)"
+          test -x "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
+      - name: Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Restore signing keystore securely
+        env:
+          KEYSTORE_B64: ${{ secrets.CORSICA_RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KEYSTORE_B64" || { echo "Keystore secret missing"; exit 1; }
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/corsica-release.jks"
+          chmod 600 "$RUNNER_TEMP/corsica-release.jks"
+      - name: Generate signed Play Store AAB
+        env:
+          CORSICA_RELEASE_KEYSTORE: ${{ runner.temp }}/corsica-release.jks
+          CORSICA_RELEASE_KEY_ALIAS: ${{ secrets.CORSICA_RELEASE_KEY_ALIAS }}
+          CORSICA_RELEASE_STORE_PASSWORD: ${{ secrets.CORSICA_RELEASE_STORE_PASSWORD }}
+          CORSICA_RELEASE_KEY_PASSWORD: ${{ secrets.CORSICA_RELEASE_KEY_PASSWORD }}
+          MEMBER_ORIGIN: ${{ inputs.member_origin }}
+        run: |
+          case "$MEMBER_ORIGIN" in https://*) ;; *) echo "HTTPS required"; exit 1 ;; esac
+          gradle -p android :app:bundleRelease "-PmemberOrigin=$MEMBER_ORIGIN" --stacktrace
+      - name: Upload signed AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: corsica-lib-play-store-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14
