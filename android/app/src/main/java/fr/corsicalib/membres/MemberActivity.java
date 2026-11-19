@@ -184,17 +184,32 @@ public final class MemberActivity extends Activity {
             request("profile/",data,this::dashboard);
         });
     }
-    void members(boolean favorites) {
+    void members(boolean favorites) { members(favorites,"Toutes les villes"); }
+    void members(boolean favorites,String cityFilter) {
         page(favorites?"Mes favoris":"Découvrir les profils",() -> dashboard(account));
-        if (!favorites) label("Rencontres en Corse · résidents et visiteurs",14).setTextColor(PINK);
+        if (!favorites) {
+            label("Rencontres en Corse · résidents et visiteurs",14).setTextColor(PINK);
+            label("Choisir une ville",14);
+            String[] cities={"Toutes les villes","Ajaccio","Bastia","Porto-Vecchio","Calvi","Bonifacio","Corte","L’Île-Rousse","Propriano","Autres villes"};
+            Spinner cityChoice=new Spinner(this);
+            cityChoice.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,cities));
+            int selected=Arrays.asList(cities).indexOf(cityFilter);
+            cityChoice.setSelection(Math.max(0,selected));
+            panel.addView(cityChoice);
+            button("Rechercher",() -> members(false,cities[cityChoice.getSelectedItemPosition()]));
+        }
         request("members/",null,d -> {
             JSONArray rows=d.getJSONArray("members"); int count=0;
             for (int i=0;i<rows.length();i++) {
                 JSONObject p=rows.getJSONObject(i);
                 if (favorites && !p.optBoolean("favorite")) continue;
-                button(p.optString("pseudo")+" · "+p.optString("city"),() -> peer(p,favorites)); count++;
+                String city=p.optString("city").trim();
+                boolean known=Arrays.asList("Ajaccio","Bastia","Porto-Vecchio","Calvi","Bonifacio","Corte","L’Île-Rousse","Propriano").contains(city);
+                if (!favorites && !"Toutes les villes".equals(cityFilter)
+                    && !("Autres villes".equals(cityFilter) ? !known : city.equalsIgnoreCase(cityFilter))) continue;
+                button(p.optString("pseudo")+" · "+city,() -> peer(p,favorites)); count++;
             }
-            if (count==0) label(favorites?"Aucun favori pour le moment.":"Aucun autre membre vérifié pour le moment.",16);
+            if (count==0) label(favorites?"Aucun favori pour le moment.":"Aucun profil disponible pour cette sélection.",16);
         });
     }
     void peer(JSONObject p,boolean favorites) {
