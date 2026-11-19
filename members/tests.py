@@ -134,3 +134,54 @@ class MemberFlow(TestCase):
         self.client.post("/inscription/", {**self.data, "email": "autre@example.org"})
         Profile.objects.exclude(pk=p.pk).update(email_ok=True, adult_at=timezone.now())
         self.assertEqual(self.client.get(url).status_code, 404)
+
+
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+class MobileTests(TestCase):
+    base = "/api/mobile/"
+
+    def test_csrf_roundtrip(self):
+        client = Client(enforce_csrf_checks=True)
+        csrf = client.get(self.base + "state/").json()["csrf"]
+        url = self.base + "account/signup/"
+        self.assertEqual(client.post(url, MemberFlow.data).status_code, 403)
+        state = client.post(url, MemberFlow.data, HTTP_X_CSRFTOKEN=csrf).json()
+        self.assertTrue(state["connected"])
+        self.assertFalse(state["adult"])
+        self.assertEqual(client.get(self.base + "members/").status_code, 403)
+        self.assertEqual(client.post(self.base + "account/logout/", HTTP_X_CSRFTOKEN=state["csrf"]).status_code, 200)
+        self.assertEqual(client.get(self.base + "members/").status_code, 401)
+        csrf = client.get(self.base + "state/").json()["csrf"]
+        self.assertTrue(client.post(self.base + "account/login/", MemberFlow.data,
+                                    HTTP_X_CSRFTOKEN=csrf).json()["connected"])
+
+    def test_member_privacy_and_social(self):
+        clients, profiles = [], []
+        for n in range(3):
+            client = Client()
+            data = client.post(self.base + "account/signup/", {
+                **MemberFlow.data, "email": f"test{n}@example.org", "pseudo": f"Compte{n}"}).json()
+            clients.append(client)
+            profiles.append(data["profile"]["id"])
+        a, b, c = clients
+        ida, idb, idc = profiles
+        Profile.objects.filter(pk__in=[ida, idb]).update(adult_at=timezone.now(), email_ok=True)
+        listing = a.get(self.base + "members/").json()["members"]
+        self.assertEqual([p["id"] for p in listing], [idb])
+        self.assertNotIn("email", listing[0])
+        def url(pk, action):
+            return self.base + f"members/{pk}/{action}/"
+        fav = url(idb, "favorite")
+        for _ in range(2):
+            self.assertEqual(a.post(fav, {"enabled": "true"}).status_code, 200)
+        self.assertTrue(a.get(self.base + "members/").json()["members"][0]["favorite"])
+        a.post(fav, {"enabled": "false"})
+        self.assertFalse(a.get(self.base + "members/").json()["members"][0]["favorite"])
+        self.assertEqual(a.post(url(idc,"messages"), {"body": "Coucou"}).status_code, 404)
+        self.assertEqual(a.post(url(idb,"messages"), {"body": " "}).status_code, 400)
+        a.post(url(idb,"messages"), {"body": "Bonjour !"})
+        self.assertEqual(b.get(url(ida,"messages")).json()["messages"], [{"mine": False,"body":"Bonjour !"}])
+        self.assertEqual(c.get(url(ida,"messages")).status_code, 403)
+        Profile.objects.filter(pk=idc).update(adult_at=timezone.now(), email_ok=True)
+        self.assertEqual(c.get(url(ida,"messages")).json()["messages"], [])
+        self.assertEqual(a.post(self.base + "profile/", {**MemberFlow.data, "city":"Ajaccio"}).json()["profile"]["city"], "Ajaccio")

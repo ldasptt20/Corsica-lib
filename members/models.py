@@ -26,3 +26,17 @@ class Attempt(models.Model):
     key = models.CharField(max_length=64, primary_key=True)
     expires = models.DateTimeField(db_index=True)
     count = models.PositiveIntegerField(default=0)
+
+
+class Favorite(models.Model):
+    owner = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="favorites")
+    target = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="+")
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["owner", "target"], name="unique_favorite")]
+
+
+class Message(models.Model):
+    sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="sent")
+    recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="received")
+    body = models.CharField(max_length=2000)
+    created = models.DateTimeField(auto_now_add=True)
