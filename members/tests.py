@@ -185,3 +185,25 @@ class MobileTests(TestCase):
         Profile.objects.filter(pk=idc).update(adult_at=timezone.now(), email_ok=True)
         self.assertEqual(c.get(url(ida,"messages")).json()["messages"], [])
         self.assertEqual(a.post(self.base + "profile/", {**MemberFlow.data, "city":"Ajaccio"}).json()["profile"]["city"], "Ajaccio")
+
+    def test_member_block_and_report(self):
+        first, second = Client(), Client()
+        a = first.post(self.base + "account/signup/", {
+            **MemberFlow.data, "email": "one@example.org", "pseudo": "Un"}).json()["profile"]["id"]
+        b = second.post(self.base + "account/signup/", {
+            **MemberFlow.data, "email": "two@example.org", "pseudo": "Deux"}).json()["profile"]["id"]
+        Profile.objects.filter(pk__in=[a, b]).update(email_ok=True, adult_at=timezone.now())
+        first.post(self.base + f"members/{b}/favorite/", {"enabled": "true"})
+        self.assertEqual(first.post(self.base + f"members/{b}/report/", {"reason": "Profil suspect"}).status_code, 201)
+        from .models import Block, Favorite, Report
+        self.assertEqual(Report.objects.filter(reporter_id=a, target_id=b).count(), 1)
+        self.assertEqual(first.post(self.base + f"members/{b}/block/", {"enabled": "true"}).status_code, 200)
+        self.assertTrue(Block.objects.filter(owner_id=a, target_id=b).exists())
+        self.assertFalse(Favorite.objects.filter(owner_id=a, target_id=b).exists())
+        self.assertEqual(first.get(self.base + "members/").json()["members"], [])
+        self.assertEqual(second.get(self.base + "members/").json()["members"], [])
+        self.assertEqual(first.post(self.base + f"members/{b}/messages/", {"body": "Bonjour"}).status_code, 404)
+        self.assertEqual(second.post(self.base + f"members/{a}/messages/", {"body": "Bonjour"}).status_code, 404)
+        self.assertEqual(first.post(self.base + f"members/{b}/block/", {"enabled": "false"}).status_code, 200)
+        self.assertEqual(len(first.get(self.base + "members/").json()["members"]), 1)
+        self.assertEqual(first.post(self.base + f"members/{b}/report/", {"reason": "x"}).status_code, 400)
