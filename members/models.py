@@ -40,3 +40,20 @@ class Message(models.Model):
     recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="received")
     body = models.CharField(max_length=2000)
     created = models.DateTimeField(auto_now_add=True)
+
+
+class Block(models.Model):
+    owner = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="blocked_profiles")
+    target = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="blocked_by")
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["owner", "target"], name="unique_block")]
+
+
+class Report(models.Model):
+    reporter = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="submitted_reports")
+    target = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="received_reports")
+    reason = models.CharField(max_length=500)
+    created = models.DateTimeField(auto_now_add=True)
+    reviewed = models.BooleanField(default=False)
