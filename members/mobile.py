@@ -6,7 +6,7 @@ from django.middleware.csrf import get_token
 from django.views.decorators.http import require_GET, require_POST
 
 from . import forms, views
-from .models import Favorite, Message, Profile
+from .models import Block, Favorite, Message, Profile, Report
 
 
 def fail(message, status):
@@ -92,6 +92,9 @@ def profile(request, p):
 @verified
 def directory(request, p):
     peers = Profile.objects.filter(user__is_active=True, email_ok=True, adult_at__isnull=False).exclude(pk=p.pk)
+    hidden_ids = set(Block.objects.filter(Q(owner=p) | Q(target=p)).values_list("owner_id", "target_id"))
+    blocked = {member_id for pair in hidden_ids for member_id in pair if member_id != p.pk}
+    peers = peers.exclude(pk__in=blocked)
     favorites = set(p.favorites.values_list("target_id", flat=True))
     return JsonResponse({"members": [dict(public(other), favorite=other.pk in favorites)
                                      for other in peers.order_by("pseudo", "pk")]})
@@ -101,6 +104,25 @@ def directory(request, p):
 def contact(request, p, pk, action):
     peer = Profile.objects.filter(pk=pk, user__is_active=True, email_ok=True, adult_at__isnull=False).exclude(pk=p.pk).first()
     if not peer:
+        return fail("Profil indisponible.", 404)
+    if action == "block" and request.method == "POST":
+        if request.POST.get("enabled") == "true":
+            Block.objects.get_or_create(owner=p, target=peer)
+            Favorite.objects.filter(Q(owner=p, target=peer) | Q(owner=peer, target=p)).delete()
+        elif request.POST.get("enabled") == "false":
+            Block.objects.filter(owner=p, target=peer).delete()
+        else:
+            return fail("Indiquez enabled=true ou enabled=false.", 400)
+        return JsonResponse({"ok": True})
+    if action == "report" and request.method == "POST":
+        reason = request.POST.get("reason", "").strip()
+        if not 5 <= len(reason) <= 500:
+            return fail("Le signalement doit contenir entre 5 et 500 caractères.", 400)
+        if views.limited("report", p.pk, 20):
+            return fail("Trop de signalements. Réessayez plus tard.", 429)
+        Report.objects.create(reporter=p, target=peer, reason=reason)
+        return JsonResponse({"ok": True}, status=201)
+    if Block.objects.filter(Q(owner=p, target=peer) | Q(owner=peer, target=p)).exists():
         return fail("Profil indisponible.", 404)
     if action == "favorite" and request.method == "POST":
         if request.POST.get("enabled") == "true":
