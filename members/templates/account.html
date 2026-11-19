@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#140e17"><title>{{ title }} · Corsica Lib</title>
+<style>
+:root {color-scheme:dark;font:100%/1.55 system-ui,sans-serif;background:#140e17;color:#fff5fa}
+* {box-sizing:border-box} body {max-width:38rem;margin:auto;padding:1.3rem} header,nav {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem}
+header {padding:1rem 0;border-bottom:1px solid #674954}.brand {font-weight:800;letter-spacing:.08em}.brand span,a {color:#ff81c4}
+main {margin:2rem 0;background:#241822;padding:clamp(1.1rem,5vw,2.4rem);border-radius:1rem}
+h1 {margin-top:0;line-height:1.15} label {display:block;font-weight:600} input,select,textarea {color:inherit;background:#140e17;border:1px solid #966e83;border-radius:.4rem;padding:.7rem;width:100%;font:inherit}
+button {padding:.65rem 1rem;border:0;border-radius:.5rem;font:inherit;font-weight:650;background:#ff1493;color:#160a13;cursor:pointer}
+header button {background:transparent;color:#ff81c4;text-decoration:underline} :focus-visible {outline:3px solid white;outline-offset:2px}
+.errorlist {color:#ffb1ce} figure {margin:1rem 0} img {max-width:100%;border-radius:.5rem}
+</style></head><body><header><a class="brand" href="/">CORSICA <span>LIB</span></a>
+<nav>{% if request.user.is_authenticated %}<a href="{% url 'account' %}">Mon compte</a><form method="post" action="{% url 'signout' %}">{% csrf_token %}<button>Déconnexion</button></form>
+{% else %}<a href="{% url 'signup' %}">Inscription</a><a href="{% url 'signin' %}">Connexion</a>{% endif %}</nav></header>
+<main><h1>{{ title }}</h1>{% if notice %}<p role="status">{{ notice }}</p>{% endif %}
+{% if button %}<form method="post">{% csrf_token %}{{ form.as_p }}<button>{{ button }}</button></form>{% endif %}
+{% if account %}<p>{{ account.pseudo }} · {{ account.city }}</p>
+{% if not account.email_ok %}<h2>Confirmez votre e-mail</h2><p>Ouvrez le lien reçu à l’adresse {{ request.user.email }}.</p>
+<form method="post" action="{% url 'resend' %}">{% csrf_token %}<button>Renvoyer le lien</button></form>
+{% elif not account.adult_at %}<h2>Vérifiez votre majorité</h2><p>Le contrôle se déroule chez Yoti par selfie ou document. Corsica Lib ne reçoit aucune image de ce contrôle.</p>
+<form method="post" action="{% url 'start_age' %}">{% csrf_token %}<button>Continuer chez Yoti</button></form>
+{% if account.age_session %}<p><a href="{% url 'age_return' %}">Vérifier le résultat</a></p>{% endif %}
+{% else %}<a href="{% url 'edit' %}">Modifier mon profil et mes photos</a>{% endif %}{% endif %}
+{% if gallery %}<h2>Mes photos</h2><p>Ces photos sont visibles uniquement par vous dans cette version.</p>
+{% for pk in photos %}<figure><img src="{% url 'photo' pk %}" alt="Ma photo {{ forloop.counter }}" loading="lazy"></figure>{% endfor %}
+<form method="post" enctype="multipart/form-data" action="{% url 'upload' %}">{% csrf_token %}<p><label for="photo">Photo (JPEG, PNG ou WebP, 5 Mo maximum)</label><input id="photo" type="file" name="photo" accept="image/jpeg,image/png,image/webp" required></p><button>Ajouter la photo</button></form>{% endif %}
+</main></body></html>

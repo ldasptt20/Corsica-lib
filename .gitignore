@@ -1,0 +1,8 @@
+__pycache__/
+.venv/
+.private/
+.env
+.gradle/
+build/
+local.properties
+.idea/

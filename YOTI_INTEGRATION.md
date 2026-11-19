@@ -1,6 +1,9 @@
 # Inscription sécurisée Corsica Lib — intégration Yoti
 
-## État
+## Branche de développement
+Le serveur membre, ses tests et les paramètres de configuration sont décrits dans [le README](README.md). Le parcours réel avec un compte Yoti reste à valider.
+
+## État de la vitrine publique
 Le site actuel est une démonstration statique. **L'inscription réelle reste fermée** tant qu'un backend sécurisé, une base de données, un contrat Yoti et des clés de production ne sont pas configurés.
 
 ## Parcours obligatoire
@@ -17,7 +20,7 @@ Le site actuel est une démonstration statique. **L'inscription réelle reste fe
 ## Choix produit confirmé — 18 novembre 2026
 La méthode principale demandée est **Yoti avec selfie** (estimation faciale de l'âge), sans téléchargement de photo dans Corsica Lib. L'intégration réelle n'est pas encore activée et ne peut pas l'être sur une page purement statique. Le retour de Yoti doit être vérifié côté serveur ; l'utilisateur ne doit pas accéder aux fonctions adultes sur simple clic.
 
-## Configuration Render (à faire lorsque le backend existe)
+## Configuration envisagée pour un hébergement ultérieur
 - `YOTI_API_KEY` : secret, uniquement variable d'environnement serveur.
 - `YOTI_SDK_ID` : identifiant Yoti AVS.
 - `APP_BASE_URL` : adresse publique confirmée.
