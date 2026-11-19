@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: corsica-lib-membres
+    runtime: python
+    region: frankfurt
+    plan: starter
+    branch: feature/android-build-validation
+    buildCommand: pip install -r requirements.txt 'gunicorn>=23,<27'
+    startCommand: python manage.py migrate --noinput && gunicorn --bind 0.0.0.0:$PORT 'django.core.wsgi:get_wsgi_application()'
+    disk:
+      name: donnees-membres
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: members.settings
+      - key: MEMBERS_DATA_DIR
+        value: /var/data/membres
+      - key: SESSION_SECRET
+        generateValue: true
