@@ -18,9 +18,33 @@ android {
         throw new GradleException('Adresse du serveur membre invalide')
     }
     defaultConfig.buildConfigField 'String', 'ORIGIN', '"' + origin + '"'
+
+    def releaseKeystore = System.getenv('CORSICA_RELEASE_KEYSTORE')
+    def releaseAlias = System.getenv('CORSICA_RELEASE_KEY_ALIAS')
+    def releaseStorePassword = System.getenv('CORSICA_RELEASE_STORE_PASSWORD')
+    def releaseKeyPassword = System.getenv('CORSICA_RELEASE_KEY_PASSWORD')
+    signingConfigs {
+        release {
+            if (releaseKeystore && releaseAlias && releaseStorePassword && releaseKeyPassword) {
+                storeFile file(releaseKeystore)
+                storePassword releaseStorePassword
+                keyAlias releaseAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         debug {
             applicationIdSuffix '.test'
+        }
+        release {
+            if (origin == 'http://127.0.0.1:8000') {
+                throw new GradleException('Une origine HTTPS publique est obligatoire pour une version Play Store')
+            }
+            if (!(releaseKeystore && releaseAlias && releaseStorePassword && releaseKeyPassword)) {
+                throw new GradleException('Signature de publication manquante')
+            }
+            signingConfig signingConfigs.release
         }
     }
 }
