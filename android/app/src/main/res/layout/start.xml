@@ -1,0 +1,18 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="#140E17"
+    android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:padding="28dp" android:gravity="center_vertical" android:orientation="vertical">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/brand" android:textColor="#FF75BD" android:letterSpacing="0.12" android:textStyle="bold" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp"
+            android:text="@string/title" android:textSize="32sp" android:textStyle="bold" android:textColor="#FFF5FA" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp"
+            android:text="@string/details" android:textSize="16sp" android:textColor="#EAD4E1" />
+        <Button android:id="@+id/signup" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="52dp" android:layout_marginTop="24dp" android:text="@string/signup" android:textAllCaps="false"
+            android:backgroundTint="#FF1493" android:textColor="#140E17" />
+        <Button android:id="@+id/login" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="52dp" android:text="@string/login" android:textAllCaps="false" android:backgroundTint="#362130" android:textColor="#FFF5FA" />
+    </LinearLayout>
+</ScrollView>

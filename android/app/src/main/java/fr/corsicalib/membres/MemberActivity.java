@@ -2,24 +2,32 @@ package fr.corsicalib.membres;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.widget.TextView;
-import androidx.browser.customtabs.CustomTabsIntent;
+import android.widget.Toast;
 
-/** Private Android client for the member server forwarded with adb reverse. */
+/** Private companion for the member server connected through adb reverse. */
 public final class MemberActivity extends Activity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
-        Uri account = Uri.parse("http://127.0.0.1:8000/compte/");
+        setContentView(R.layout.start);
+        findViewById(R.id.signup).setOnClickListener(view -> openMemberPage("/inscription/"));
+        findViewById(R.id.login).setOnClickListener(view -> openMemberPage("/connexion/"));
+    }
+
+    private void openMemberPage(String path) {
+        Uri page = Uri.parse("http://127.0.0.1:8000" + path);
+        Intent browser = new Intent(Intent.ACTION_VIEW, page);
+        // The Custom Tabs protocol accepts a null session for a standalone launch.
+        Bundle extras = new Bundle();
+        extras.putBinder("android.support.customtabs.extra.SESSION", null);
+        browser.putExtras(extras);
         try {
-            new CustomTabsIntent.Builder().build().launchUrl(this, account);
-            finish();
+            startActivity(browser);
         } catch (ActivityNotFoundException unavailable) {
-            TextView message = new TextView(this);
-            message.setText("Un navigateur Android est nécessaire pour ouvrir Corsica Lib.");
-            setContentView(message);
+            Toast.makeText(this, R.string.missing_browser, Toast.LENGTH_LONG).show();
         }
     }
 }

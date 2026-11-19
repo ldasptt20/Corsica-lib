@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Corsica Lib · Test</string>
+    <string name="brand">CORSICA LIB</string>
+    <string name="title">Mon espace membre</string>
+    <string name="details">Cette version privée se connecte au serveur de test par USB. Lancez le serveur sur votre ordinateur et activez la liaison avant de continuer.</string>
+    <string name="signup">Créer mon compte</string>
+    <string name="login">Me connecter</string>
+    <string name="missing_browser">Un navigateur Android est nécessaire pour ouvrir votre espace membre.</string>
+</resources>

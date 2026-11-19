@@ -34,7 +34,7 @@ Les tests utilisent une base éphémère, une boîte mail en mémoire et des ré
 
 ## Android de développement
 
-Le projet `android/` ouvre le parcours web dans un onglet personnalisé du navigateur Android. Le client partage ainsi la session du navigateur pour les confirmations et le retour de Yoti. Sa seule destination initiale est le serveur de développement sur le port 8000.
+Le projet `android/` affiche un accueil natif noir et fuchsia. Les boutons d’inscription et de connexion ouvrent le serveur privé dans le navigateur Android avec le protocole Custom Tabs. Le client partage ainsi la session du navigateur pour les confirmations et le retour de Yoti. Sa seule destination initiale est le serveur de développement sur le port 8000.
 
 Avec Gradle 8.11.1, JDK 17 et Android SDK 35 installés, exécuter depuis la racine :
 
