@@ -21,7 +21,9 @@ public final class MemberActivity extends Activity {
     private int generation;
     private boolean busy;
     private Runnable back;
-    private static final int PINK = Color.rgb(255,102,179);
+    private static final int PINK = Color.rgb(245,0,126);
+    private static final int BACKGROUND = Color.rgb(12,12,15);
+    private static final int SURFACE = Color.rgb(31,29,35);
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -37,37 +39,52 @@ public final class MemberActivity extends Activity {
         fields.clear();
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
-        scroll.setBackgroundColor(Color.rgb(20,14,23));
+        scroll.setBackgroundColor(BACKGROUND);
         panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setPadding(dp(24),dp(32),dp(24),dp(24));
+        panel.setPadding(dp(24),dp(28),dp(24),dp(28));
         scroll.addView(panel);
         setContentView(scroll);
         scroll.setOnApplyWindowInsetsListener((v,i) -> {
             v.setPadding(0,i.getSystemWindowInsetTop(),0,i.getSystemWindowInsetBottom());
             return i.consumeSystemWindowInsets();
         });
-        label("CORSICA LIB",16).setTextColor(PINK);
-        label(title,30);
+        TextView brand = label("Corsica Lib",23);
+        brand.setTypeface(null,android.graphics.Typeface.BOLD_ITALIC);
+        brand.setTextColor(PINK);
+        brand.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+        brand.setPadding(0,dp(12),0,dp(26));
+        TextView heading = label(title,27);
+        heading.setTypeface(null,android.graphics.Typeface.BOLD);
+        heading.setPadding(0,0,0,dp(20));
         status = label("",16);
         status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
     }
     TextView label(String text,int size) {
         TextView t = new TextView(this);
         t.setText(text); t.setTextSize(size); t.setTextColor(Color.WHITE);
+        t.setPadding(0,dp(7),0,dp(7));
         panel.addView(t); return t;
     }
     void button(String text, Runnable action) {
         Button b = new Button(this);
         b.setText(text); b.setAllCaps(false);
         b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(PINK));
-        b.setTextColor(Color.BLACK);
-        panel.addView(b); b.setOnClickListener(v -> { if (!busy) action.run(); });
+        b.setTextColor(Color.WHITE);
+        b.setTypeface(null,android.graphics.Typeface.BOLD);
+        b.setMinHeight(dp(52));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1,dp(56));
+        lp.setMargins(0,dp(8),0,dp(8));
+        panel.addView(b,lp); b.setOnClickListener(v -> { if (!busy) action.run(); });
     }
     void field(String key,String title,String value,int type) {
         label(title,14);
         EditText edit = new EditText(this); edit.setInputType(type); edit.setText(value);
         edit.setContentDescription(title);
+        edit.setTextColor(Color.WHITE);
+        edit.setHintTextColor(Color.LTGRAY);
+        edit.setBackgroundTintList(android.content.res.ColorStateList.valueOf(PINK));
+        edit.setSingleLine(type != 131073);
         panel.addView(edit); fields.put(key,edit);
     }
     Spinner kind(String initial) {
@@ -103,10 +120,17 @@ public final class MemberActivity extends Activity {
         });
     }
     void home() {
-        page("Mon espace membre",null);
+        page("Rencontres, échanges et libertés entre adultes en Corse",null);
+        TextView welcome = label("ESPACE MEMBRE  ·  18+",14);
+        welcome.setTextColor(PINK);
+        welcome.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+        welcome.setPadding(0,dp(12),0,dp(25));
         if (BuildConfig.ORIGIN.startsWith("http://127.0.0.1:"))
             label("Version de test · Les comptes nécessitent une liaison USB avec le serveur membre.",16);
-        button("Créer mon compte",() -> credentials(true)); button("Me connecter",() -> credentials(false));
+        button("Se connecter",() -> credentials(false));
+        button("S’inscrire",() -> credentials(true));
+        TextView adultNotice = label("Réservé aux personnes majeures (18 ans et plus)",13);
+        adultNotice.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
     }
     void credentials(boolean signup) {
         page(signup?"Créer mon compte":"Me connecter",this::home);
@@ -141,9 +165,10 @@ public final class MemberActivity extends Activity {
             }));
             button("Consulter le résultat",() -> request("result/",null,this::dashboard));
         } else {
-            button("Les membres et leurs messages",() -> members(false));
-            button("Mes favoris",() -> members(true));
-            button("Modifier mon profil",() -> edit(p));
+            label("Découvrir les membres",19).setTextColor(PINK);
+            button("Découvrir les profils",() -> members(false));
+            button("Mes favoris  ♥",() -> members(true));
+            button("Mon profil et paramètres",() -> edit(p));
         }
         button("Me déconnecter",() -> request("account/logout/",values(),this::dashboard));
     }
