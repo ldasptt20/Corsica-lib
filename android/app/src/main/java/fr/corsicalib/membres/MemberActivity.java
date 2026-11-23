@@ -28,6 +28,9 @@ public final class MemberActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         home();
+        request("state/", null, data -> {
+            if (data.optBoolean("connected")) dashboard(data);
+        });
     }
     @Override public void onDestroy() { worker.shutdownNow(); super.onDestroy(); }
     @Override public void onBackPressed() { if (back == null) super.onBackPressed(); else back.run(); }
@@ -220,6 +223,31 @@ public final class MemberActivity extends Activity {
         button(fav?"Retirer des favoris":"Ajouter aux favoris",() ->
             request(path+"favorite/",Collections.singletonMap("enabled",Boolean.toString(!fav)),d -> members(favorites)));
         button("Conversation",() -> chat(p,favorites));
+        button("Bloquer ce profil",() -> new AlertDialog.Builder(this)
+            .setTitle("Bloquer ce membre ?")
+            .setMessage("Ce profil ne pourra plus vous contacter. Vous ne le verrez plus dans les recherches.")
+            .setNegativeButton("Annuler",null)
+            .setPositiveButton("Bloquer",(dialog,which) ->
+                request(path+"block/",Collections.singletonMap("enabled","true"),
+                    d -> members(favorites))).show());
+        button("Signaler ce profil",() -> {
+            final EditText reason = new EditText(this);
+            reason.setHint("Expliquez le problème (5 à 500 caractères)");
+            reason.setMinLines(3);
+            new AlertDialog.Builder(this)
+                .setTitle("Signaler un profil")
+                .setView(reason)
+                .setNegativeButton("Annuler",null)
+                .setPositiveButton("Envoyer",(dialog,which) -> {
+                    String text=reason.getText().toString().trim();
+                    if (text.length()<5 || text.length()>500) {
+                        status.setText("Le signalement doit contenir entre 5 et 500 caractères.");
+                        return;
+                    }
+                    request(path+"report/",Collections.singletonMap("reason",text),
+                        d -> status.setText("Votre signalement a été envoyé."));
+                }).show();
+        });
     }
     void chat(JSONObject p,boolean favorites) {
         page("Messages · "+p.optString("pseudo"),() -> peer(p,favorites));
