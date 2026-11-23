@@ -3,7 +3,7 @@ name: Android debug APK
 on:
   push:
     branches:
-      - feature/android-build-validation
+      - fix/android-xiaomi-recovery
   pull_request:
     paths:
       - 'android/**'
